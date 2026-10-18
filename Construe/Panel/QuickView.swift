@@ -5,6 +5,8 @@ import Textual
 struct QuickView: View {
     @Bindable var session: TranslationSession
     var openSettings: () -> Void
+    /// Opens the handoff link and closes the panel.
+    var continueInClaude: (URL) -> Void = { _ in }
     /// Reports the content's natural height so the panel can be resized to fit.
     var onHeightChange: (CGFloat) -> Void = { _ in }
 
@@ -108,6 +110,16 @@ struct QuickView: View {
                     StructuredText(markdown: session.response)
                         .textual.textSelection(.enabled)
                         .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                if let url = session.handoffURL {
+                    HStack {
+                        Spacer()
+                        Button("Continue in Claude", systemImage: "arrow.up.forward.app") {
+                            continueInClaude(url)
+                        }
+                        .keyboardShortcut(.return, modifiers: .command)
+                        .help("Open a new claude.ai chat prefilled with this exchange (⌘↩)")
+                    }
                 }
                 ForEach(session.notices, id: \.self) { notice in
                     Label(notice, systemImage: "exclamationmark.triangle")

@@ -30,8 +30,21 @@ final class AppSettings {
         Explain the text the user sends. If it's in a foreign language, translate it, \
         then break down anything non-obvious: idioms, grammar, word choice and tone. Be concise.
         """
-    static let defaultHandoffPreamble =
-        "Continuing from Construe. The text and the earlier explanation are below — let's discuss."
+    /// `{{phrase}}` and `{{reply}}` are replaced by the sent text and Claude's answer; the trailing
+    /// separator and blank lines leave room to type the follow-up question.
+    static let defaultHandoffTemplate = """
+        I'd like to discuss this phrase and its breakdown further.
+
+        {{phrase}}
+
+        ---
+
+        {{reply}}
+
+        ---
+
+
+        """
 
     /// Models offered in the Settings preset menu as (display name, model ID).
     static let modelPresets: [(name: String, id: String)] = [
@@ -45,7 +58,7 @@ final class AppSettings {
         static let effort = "effort"
         static let systemPrompt = "systemPrompt"
         static let projectID = "projectID"
-        static let handoffPreamble = "handoffPreamble"
+        static let handoffTemplate = "handoffTemplate"
         static let sendImage = "sendImage"
         static let ocrLanguage = "ocrLanguage"
         static let fastMode = "fastMode"
@@ -70,8 +83,9 @@ final class AppSettings {
         didSet { defaults.set(projectID, forKey: Key.projectID) }
     }
 
-    var handoffPreamble: String {
-        didSet { defaults.set(handoffPreamble, forKey: Key.handoffPreamble) }
+    /// Text prefilled into the claude.ai chat; see `defaultHandoffTemplate` for the placeholders.
+    var handoffTemplate: String {
+        didSet { defaults.set(handoffTemplate, forKey: Key.handoffTemplate) }
     }
 
     /// Whether a pasted screenshot is attached to the request alongside its OCR text.
@@ -95,7 +109,7 @@ final class AppSettings {
         effort = defaults.string(forKey: Key.effort).flatMap(Effort.init(rawValue:)) ?? Self.defaultEffort
         systemPrompt = defaults.string(forKey: Key.systemPrompt) ?? Self.defaultSystemPrompt
         projectID = defaults.string(forKey: Key.projectID) ?? ""
-        handoffPreamble = defaults.string(forKey: Key.handoffPreamble) ?? Self.defaultHandoffPreamble
+        handoffTemplate = defaults.string(forKey: Key.handoffTemplate) ?? Self.defaultHandoffTemplate
         sendImage = defaults.object(forKey: Key.sendImage) as? Bool ?? true
         ocrLanguage = defaults.string(forKey: Key.ocrLanguage)
         fastMode = defaults.bool(forKey: Key.fastMode)

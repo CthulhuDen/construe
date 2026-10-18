@@ -159,6 +159,7 @@ struct ClaudeSettingsView: View {
 
 struct HandoffSettingsView: View {
     @Bindable var settings: AppSettings
+    @Environment(\.openURL) private var openURL
 
     var body: some View {
         Form {
@@ -170,14 +171,37 @@ struct HandoffSettingsView: View {
                     .foregroundStyle(.secondary)
             }
 
-            Section("Preamble") {
-                TextEditor(text: $settings.handoffPreamble)
-                    .font(.body)
-                    .frame(height: 80)
+            Section {
+                TextEditor(text: $settings.handoffTemplate)
+                    .font(.body.monospaced())
+                    .frame(height: 200)
                 Button("Reset to default") {
-                    settings.handoffPreamble = AppSettings.defaultHandoffPreamble
+                    settings.handoffTemplate = AppSettings.defaultHandoffTemplate
                 }
-                .disabled(settings.handoffPreamble == AppSettings.defaultHandoffPreamble)
+                .disabled(settings.handoffTemplate == AppSettings.defaultHandoffTemplate)
+            } header: {
+                Text("Template")
+            } footer: {
+                Text("\(ClaudeHandoff.phrasePlaceholder) is replaced by the text you sent, \(ClaudeHandoff.replyPlaceholder) by Claude's answer.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Section {
+                Button("Test link") {
+                    let text = ClaudeHandoff.text(
+                        template: settings.handoffTemplate,
+                        phrase: "¿Qué tal? Me he liado un poco.",
+                        reply: "Translation: How are you? I got a bit muddled."
+                    )
+                    if let url = ClaudeHandoff.url(projectID: settings.projectID, text: text) {
+                        openURL(url)
+                    }
+                }
+            } footer: {
+                Text("Opens a new claude.ai chat with a sample prefill, so you can check the project and template.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
         }
         .settingsPane()

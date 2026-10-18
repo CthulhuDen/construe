@@ -35,6 +35,10 @@ final class PanelController {
                 self?.hide()
                 self?.openSettings()
             },
+            continueInClaude: { [weak self] url in
+                NSWorkspace.shared.open(url)
+                self?.hide()
+            },
             onHeightChange: { [weak self] height in
                 // Resize on the next run loop turn, never inside the layout pass that reported the
                 // change: resizing the window during layout re-enters layout and can overflow the stack.

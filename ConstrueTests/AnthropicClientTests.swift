@@ -295,6 +295,21 @@ struct AnthropicClientStreamTests {
         #expect(try sentContentTypes() == (sendImage ? ["image", "text"] : ["text"]))
     }
 
+    @Test func handoffUsesTheSentPhraseAfterTheInputIsCleared() async throws {
+        stubStream(speed: nil)
+        let session = try await finishedSession(fastMode: false)
+        session.clearInput()
+
+        let url = try #require(session.handoffURL)
+        let q = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first { $0.name == "q" }?.value
+        #expect(q?.contains("hola\n\n---\n\nHello\n\n---") == true)
+    }
+
+    @Test func noHandoffBeforeAResponse() throws {
+        let defaults = try #require(UserDefaults(suiteName: "HandoffTests-\(UUID().uuidString)"))
+        #expect(TranslationSession(settings: AppSettings(defaults: defaults), apiKey: { nil }).handoffURL == nil)
+    }
+
     @Test func httpErrorWithoutJSONBody() async {
         StubURLProtocol.status = 502
         StubURLProtocol.body = Data("Bad Gateway".utf8)

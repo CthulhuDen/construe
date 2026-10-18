@@ -20,6 +20,9 @@ final class TranslationSession {
     /// Shown under the screenshot when no text could be recognized.
     private(set) var imageNotice: String?
     private(set) var response = ""
+    /// The text that produced `response`; the input is cleared on the next invocation, but the
+    /// handoff still needs the phrase.
+    private(set) var submittedText = ""
     private(set) var phase = Phase.idle
     /// Shown under a finished response: it didn't end normally (refusal, length limit),
     /// or fast mode was requested but the response doesn't confirm it.
@@ -77,6 +80,13 @@ final class TranslationSession {
         }
     }
 
+    /// Link that continues the exchange in a new claude.ai chat, once there is a finished response.
+    var handoffURL: URL? {
+        guard phase != .streaming, !response.isEmpty else { return nil }
+        let text = ClaudeHandoff.text(template: settings.handoffTemplate, phrase: submittedText, reply: response)
+        return ClaudeHandoff.url(projectID: settings.projectID, text: text)
+    }
+
     var canSend: Bool {
         !input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && phase != .streaming
     }
@@ -98,6 +108,7 @@ final class TranslationSession {
         )
         task?.cancel()
         response = ""
+        submittedText = input
         notices = []
         phase = .streaming
         let expectsFastMode = request.fastMode && AnthropicClient.fastModeModels.contains(request.model)
