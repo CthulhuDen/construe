@@ -59,6 +59,11 @@ final class TranslationSession {
         imageNotice = nil
     }
 
+    /// Shows `message` in the screenshot row, e.g. when a screen grab fails.
+    func showImageNotice(_ message: String) {
+        imageNotice = message
+    }
+
     /// Attaches a pasted screenshot and adds the text recognized in it to the input,
     /// so it can be trimmed to the exact phrase before sending.
     func attachImage(_ image: CGImage) async {

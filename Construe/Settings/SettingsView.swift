@@ -45,6 +45,21 @@ struct GeneralSettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.red)
             }
+
+            Section("Screen capture") {
+                KeyboardShortcuts.Recorder(for: .grabRegion) {
+                    Text("Grab region")
+                    Text("In the popup: drag out a part of the screen to read its text.")
+                }
+                KeyboardShortcuts.Recorder(for: .regrabRegion) {
+                    Text("Re-grab last region")
+                    Text("In the popup: read the same part of the screen again, e.g. the next subtitle.")
+                }
+                KeyboardShortcuts.Recorder(for: .globalRegrab) {
+                    Text("Re-grab from anywhere")
+                    Text("Re-grabs the last region and opens the popup from any app. Clear it to turn it off.")
+                }
+            }
         }
         .settingsPane()
     }

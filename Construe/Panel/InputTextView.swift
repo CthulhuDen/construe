@@ -59,17 +59,30 @@ struct InputTextView: NSViewRepresentable {
 
     func sizeThatFits(_ proposal: ProposedViewSize, nsView: NSScrollView, context: Context) -> CGSize? {
         guard let textView = nsView.documentView as? NSTextView,
-              let layoutManager = textView.layoutManager,
-              let container = textView.textContainer
+              let layoutManager = textView.layoutManager
         else { return nil }
 
         let width = proposal.width ?? 400
-        container.containerSize = NSSize(width: width, height: .greatestFiniteMagnitude)
-        layoutManager.ensureLayout(for: container)
         let lineHeight = layoutManager.defaultLineHeight(for: font)
-        let textHeight = layoutManager.usedRect(for: container).height
+        let textHeight = Self.textHeight(textView.string, font: font, width: width)
         let height = min(max(textHeight, lineHeight), lineHeight * CGFloat(maxLines))
         return CGSize(width: width, height: height.rounded(.up))
+    }
+
+    /// Height of `string` laid out at `width`, measured with a separate TextKit stack.
+    ///
+    /// SwiftUI also calls `sizeThatFits` with probe widths (zero, infinity) that it never applies.
+    /// Measuring with the visible text container would leave it at the last probed width, which,
+    /// if the view's frame then doesn't change, shows the text as one long, clipped line.
+    private static func textHeight(_ string: String, font: NSFont, width: CGFloat) -> CGFloat {
+        let storage = NSTextStorage(string: string, attributes: [.font: font])
+        let layoutManager = NSLayoutManager()
+        let container = NSTextContainer(size: NSSize(width: width, height: .greatestFiniteMagnitude))
+        container.lineFragmentPadding = 0
+        layoutManager.addTextContainer(container)
+        storage.addLayoutManager(layoutManager)
+        layoutManager.ensureLayout(for: container)
+        return layoutManager.usedRect(for: container).height
     }
 
     final class Coordinator: NSObject, NSTextViewDelegate {

@@ -15,6 +15,9 @@ foreign-language text and breaks down anything non-obvious.
 - **Paste a screenshot** (for example subtitles grabbed with ⌘⇧⌃4) and its text is recognized on your Mac, then placed
   in the input so you can trim it to the exact phrase. Optionally the image itself is sent along, so Claude can correct
   recognition mistakes.
+- **Grab a screen region** straight from the popup, without a screenshot: drag a rectangle over the text and it is read
+  the same way. **Re-grab** reads the same rectangle again, which is handy for subtitles that always appear in the same
+  place, and also works from any app.
 - **Streaming, formatted replies** with headings, lists and clickable links. The last reply stays in the popup when you
   close it, so following a link doesn't lose it.
 - **Continue in Claude** opens a new claude.ai chat, optionally inside one of your Projects, prefilled with the phrase
@@ -44,8 +47,13 @@ There is no prebuilt download yet; build it from source (see [Development](#deve
 | Send | Return |
 | New line in the input | ⇧Return |
 | Paste a screenshot | ⌘V with an image on the clipboard |
+| Grab a screen region | ⌃⌥X in the popup, then drag; Esc cancels |
+| Re-grab the last region | ⌃⌥C, in the popup or from any app |
 | Continue in Claude | ⌘↩, or the button under a finished reply |
 | Close | Esc, or click anywhere else |
+
+The grab and re-grab shortcuts are changeable in Settings > General; clear the global re-grab there to give ⌃⌥C back to
+other apps. Grabbed text is added to the input like a pasted screenshot; the last region is forgotten when Construe quits.
 
 Each time you open the popup the input is empty, but the previous reply is still there. A reply that is still streaming
 keeps going in the background when you close the popup.
@@ -56,7 +64,9 @@ keeps going in the background when you close the popup.
 - Screenshots are read on your Mac with Apple's Vision framework. The text you send, and the screenshot if image
   attachment is on, go to the Anthropic API under your Console account's data policies.
 - Continue in Claude puts the phrase and reply into a claude.ai link that opens in your browser.
-- Construe has no server and no analytics. It needs no special permissions; it never captures your screen itself.
+- Grabbing a screen region needs the Screen Recording permission, which macOS asks for on first use. Construe captures
+  only the region you selected, only when you ask, and handles it like a pasted screenshot.
+- Construe has no server and no analytics.
 
 ## Limitations
 
@@ -87,6 +97,7 @@ Xcode's automatic signing creates it. Per-developer values never go into `projec
 | `Construe/Session` | One popup session: input, screenshot, streamed reply |
 | `Construe/API` | Messages API client (raw HTTP with SSE streaming; Swift has no official SDK) |
 | `Construe/OCR` | Vision text recognition |
+| `Construe/Capture` | Screen region selection overlay and ScreenCaptureKit capture |
 | `Construe/Handoff` | claude.ai link building, the only place that knows claude.ai URLs |
 | `Construe/Settings` | Settings model (UserDefaults), Keychain store, Settings window |
 | `ConstrueTests` | Swift Testing suites |

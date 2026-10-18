@@ -4,6 +4,13 @@ import KeyboardShortcuts
 extension KeyboardShortcuts.Name {
     /// Global shortcut that shows or hides the quick panel.
     static let togglePanel = Self("togglePanel", initial: .init(.space, modifiers: [.control, .option]))
+    /// In the panel only: drag out a screen region to read text from.
+    static let grabRegion = Self("grabRegion", initial: .init(.x, modifiers: [.control, .option]))
+    /// In the panel only: capture the last region again.
+    static let regrabRegion = Self("regrabRegion", initial: .init(.c, modifiers: [.control, .option]))
+    /// Global shortcut that captures the last region again and opens the panel. Shares its default
+    /// with `regrabRegion`, so the same key works everywhere.
+    static let globalRegrab = Self("globalRegrab", initial: .init(.c, modifiers: [.control, .option]))
 }
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -16,6 +23,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         KeyboardShortcuts.onKeyUp(for: .togglePanel) { [weak self] in
             self?.panelController.toggle()
+        }
+        KeyboardShortcuts.onKeyUp(for: .globalRegrab) { [weak self] in
+            self?.panelController.regrabRegion()
         }
     }
 }

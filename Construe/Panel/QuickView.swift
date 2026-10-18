@@ -1,9 +1,14 @@
+import KeyboardShortcuts
 import SwiftUI
 import Textual
 
 /// Content of the quick panel: the input field and the streamed response below it.
 struct QuickView: View {
     @Bindable var session: TranslationSession
+    /// Whether a region has been grabbed before, so Re-grab has something to capture.
+    var canRegrab = false
+    var grabRegion: () -> Void = {}
+    var regrabRegion: () -> Void = {}
     var openSettings: () -> Void
     /// Opens the handoff link and closes the panel.
     var continueInClaude: (URL) -> Void = { _ in }
@@ -33,6 +38,10 @@ struct QuickView: View {
             }
             .padding(16)
 
+            captureRow
+                .padding(.horizontal, 16)
+                .padding(.bottom, 12)
+
             if session.imagePNG != nil || session.imageNotice != nil {
                 imageRow
                     .padding(.horizontal, 16)
@@ -45,10 +54,43 @@ struct QuickView: View {
             }
         }
         .frame(width: PanelController.panelWidth)
+        // Always take the natural height, whatever the window's current height. Otherwise flexible
+        // content (the screenshot thumbnail) shrinks while the panel lags behind a size change,
+        // and the smaller measurement feeds back into the panel height, making it bounce.
+        .fixedSize(horizontal: false, vertical: true)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { onHeightChange($0) }
         // Keep the content pinned to the top while the panel catches up with a new height.
         .frame(maxHeight: .infinity, alignment: .top)
+    }
+
+    /// Buttons that read text from a screen region, with their (changeable) panel shortcuts.
+    private var captureRow: some View {
+        HStack(spacing: 16) {
+            captureButton("Grab region", systemImage: "rectangle.dashed", shortcut: .grabRegion, action: grabRegion)
+            captureButton("Re-grab", systemImage: "arrow.clockwise", shortcut: .regrabRegion, action: regrabRegion)
+                .disabled(!canRegrab)
+            Spacer()
+        }
+        .font(.callout)
+    }
+
+    private func captureButton(
+        _ title: LocalizedStringKey, systemImage: String, shortcut name: KeyboardShortcuts.Name,
+        action: @escaping () -> Void
+    ) -> some View {
+        let shortcut = name.shortcut
+        return Button(action: action) {
+            HStack(spacing: 6) {
+                Label(title, systemImage: systemImage)
+                if let shortcut {
+                    Text(shortcut.description)
+                        .foregroundStyle(.tertiary)
+                }
+            }
+        }
+        .buttonStyle(.borderless)
+        .keyboardShortcut(shortcut?.toSwiftUI)
     }
 
     /// Thumbnail of the pasted screenshot with its status and a remove button.
