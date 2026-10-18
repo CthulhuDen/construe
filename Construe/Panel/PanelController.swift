@@ -28,7 +28,7 @@ final class PanelController {
 
     func show() {
         // Each invocation starts with an empty input but keeps the previous reply.
-        session.input = ""
+        session.clearInput()
         let rootView = QuickView(
             session: session,
             openSettings: { [weak self] in

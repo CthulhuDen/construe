@@ -112,11 +112,26 @@ struct AnthropicClientRequestTests {
 final class StubURLProtocol: URLProtocol {
     nonisolated(unsafe) static var status = 200
     nonisolated(unsafe) static var body = Data()
+    /// Body of the last request served, for inspecting what the client sent.
+    nonisolated(unsafe) static var lastRequestBody: Data?
 
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
 
     override func startLoading() {
+        // URLSession moves the body into a stream before it reaches a URLProtocol.
+        if let stream = request.httpBodyStream {
+            stream.open()
+            var data = Data()
+            var buffer = [UInt8](repeating: 0, count: 4096)
+            while stream.hasBytesAvailable {
+                let count = stream.read(&buffer, maxLength: buffer.count)
+                guard count > 0 else { break }
+                data.append(buffer, count: count)
+            }
+            stream.close()
+            Self.lastRequestBody = data
+        }
         guard let url = request.url,
               let response = HTTPURLResponse(url: url, statusCode: Self.status, httpVersion: "HTTP/1.1", headerFields: nil)
         else { return }
@@ -204,16 +219,21 @@ struct AnthropicClientStreamTests {
 
     // MARK: TranslationSession with the stubbed client (here because the stub is shared, serialized state)
 
-    private func finishedSession(fastMode: Bool, model: String = "claude-opus-5-5") async throws -> TranslationSession {
+    private func finishedSession(
+        fastMode: Bool, model: String = "claude-opus-5-5", sendImage: Bool = true,
+        prepare: (TranslationSession) async throws -> Void = { _ in }
+    ) async throws -> TranslationSession {
         let suiteName = "SessionTests-\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suiteName))
         defer { defaults.removePersistentDomain(forName: suiteName) }
         let settings = AppSettings(defaults: defaults)
         settings.model = model
         settings.fastMode = fastMode
+        settings.sendImage = sendImage
 
         let session = TranslationSession(settings: settings, client: client, apiKey: { "k" })
         session.input = "hola"
+        try await prepare(session)
         session.send()
         for _ in 0..<500 where session.phase == .streaming {
             try await Task.sleep(for: .milliseconds(10))
@@ -255,6 +275,24 @@ struct AnthropicClientStreamTests {
     @Test func noBannerForModelWithoutFastMode() async throws {
         stubStream(speed: nil)
         #expect(try await finishedSession(fastMode: true, model: "claude-haiku-4-5").notices.isEmpty)
+    }
+
+    private func sentContentTypes() throws -> [String] {
+        let data = try #require(StubURLProtocol.lastRequestBody)
+        let body = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        let messages = try #require(body["messages"] as? [[String: Any]])
+        let content = try #require(messages.first?["content"] as? [[String: Any]])
+        return content.compactMap { $0["type"] as? String }
+    }
+
+    @Test(arguments: [true, false])
+    func screenshotIsSentOnlyWhenEnabled(sendImage: Bool) async throws {
+        stubStream(speed: nil)
+        StubURLProtocol.lastRequestBody = nil
+        _ = try await finishedSession(fastMode: false, sendImage: sendImage) { session in
+            await session.attachImage(try TestImages.text("Hola"))
+        }
+        #expect(try sentContentTypes() == (sendImage ? ["image", "text"] : ["text"]))
     }
 
     @Test func httpErrorWithoutJSONBody() async {

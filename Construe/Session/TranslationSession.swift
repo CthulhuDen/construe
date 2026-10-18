@@ -1,3 +1,4 @@
+import CoreGraphics
 import Foundation
 import Observation
 
@@ -12,6 +13,12 @@ final class TranslationSession {
     }
 
     var input = ""
+    /// PNG of a pasted screenshot, already downscaled for the API.
+    private(set) var imagePNG: Data?
+    /// True while text is being recognized in a pasted screenshot.
+    private(set) var isReadingImage = false
+    /// Shown under the screenshot when no text could be recognized.
+    private(set) var imageNotice: String?
     private(set) var response = ""
     private(set) var phase = Phase.idle
     /// Shown under a finished response: it didn't end normally (refusal, length limit),
@@ -33,6 +40,43 @@ final class TranslationSession {
         self.apiKey = apiKey
     }
 
+    /// Whether the attached screenshot goes to the API (the "Attach screenshot image" setting).
+    var sendsImage: Bool {
+        settings.sendImage
+    }
+
+    /// Clears the input and any attached screenshot, keeping the last reply.
+    func clearInput() {
+        input = ""
+        removeImage()
+    }
+
+    func removeImage() {
+        imagePNG = nil
+        imageNotice = nil
+    }
+
+    /// Attaches a pasted screenshot and adds the text recognized in it to the input,
+    /// so it can be trimmed to the exact phrase before sending.
+    func attachImage(_ image: CGImage) async {
+        imagePNG = ImageAttachment.pngData(for: image)
+        imageNotice = nil
+        isReadingImage = true
+        defer { isReadingImage = false }
+
+        do {
+            let text = try await TextRecognizer.recognizeText(in: image, language: settings.ocrLanguage)
+            guard !text.isEmpty else {
+                imageNotice = "No text found in the screenshot."
+                return
+            }
+            let trimmed = input.trimmingCharacters(in: .whitespacesAndNewlines)
+            input = trimmed.isEmpty ? text : trimmed + " " + text
+        } catch {
+            imageNotice = "Couldn't read the screenshot: \(error.localizedDescription)"
+        }
+    }
+
     var canSend: Bool {
         !input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && phase != .streaming
     }
@@ -49,6 +93,7 @@ final class TranslationSession {
             effort: settings.effort,
             systemPrompt: settings.systemPrompt,
             text: input,
+            imagePNG: settings.sendImage ? imagePNG : nil,
             fastMode: settings.fastMode
         )
         task?.cancel()

@@ -8,7 +8,6 @@ struct QuickView: View {
     /// Reports the content's natural height so the panel can be resized to fit.
     var onHeightChange: (CGFloat) -> Void = { _ in }
 
-    @FocusState private var isInputFocused: Bool
     @State private var responseHeight: CGFloat = 0
 
     /// The response area grows with its content up to this height, then scrolls.
@@ -16,19 +15,27 @@ struct QuickView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack(alignment: .firstTextBaseline) {
-                TextField("Type or paste text…", text: $session.input, axis: .vertical)
-                    .textFieldStyle(.plain)
-                    .font(.title2)
-                    .lineLimit(1...6)
-                    .focused($isInputFocused)
-                    .onSubmit(session.send)
+            HStack(alignment: .top) {
+                InputTextView(
+                    text: $session.input,
+                    placeholder: "Type, paste text or a screenshot…",
+                    onSubmit: session.send,
+                    onPasteImage: { image in
+                        Task { await session.attachImage(image) }
+                    }
+                )
                 if session.phase == .streaming {
                     ProgressView()
                         .controlSize(.small)
                 }
             }
             .padding(16)
+
+            if session.imagePNG != nil || session.imageNotice != nil {
+                imageRow
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 12)
+            }
 
             if showsResponseArea {
                 Divider()
@@ -40,9 +47,39 @@ struct QuickView: View {
         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { onHeightChange($0) }
         // Keep the content pinned to the top while the panel catches up with a new height.
         .frame(maxHeight: .infinity, alignment: .top)
-        .defaultFocus($isInputFocused, true)
-        // The panel becomes key right after the view appears; focusing a turn later makes it stick.
-        .onAppear { DispatchQueue.main.async { isInputFocused = true } }
+    }
+
+    /// Thumbnail of the pasted screenshot with its status and a remove button.
+    private var imageRow: some View {
+        HStack(spacing: 10) {
+            if let png = session.imagePNG, let image = NSImage(data: png) {
+                Image(nsImage: image)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(maxWidth: 120, maxHeight: 40)
+                    .clipShape(RoundedRectangle(cornerRadius: 4))
+            }
+            Group {
+                if session.isReadingImage {
+                    HStack(spacing: 6) {
+                        ProgressView()
+                            .controlSize(.small)
+                        Text("Reading text…")
+                    }
+                } else if let notice = session.imageNotice {
+                    Text(notice)
+                } else if !session.sendsImage {
+                    Text("Text only; the image isn't sent (see Settings).")
+                }
+            }
+            .font(.callout)
+            .foregroundStyle(.secondary)
+            Spacer()
+            Button("Remove screenshot", systemImage: "xmark.circle.fill", action: session.removeImage)
+                .labelStyle(.iconOnly)
+                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
+        }
     }
 
     private var showsResponseArea: Bool {
