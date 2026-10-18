@@ -23,9 +23,15 @@ struct GeneralSettingsView: View {
 
     var body: some View {
         Form {
-            KeyboardShortcuts.Recorder("Show Construe:", name: .togglePanel)
+            KeyboardShortcuts.Recorder(for: .togglePanel) {
+                Text("Show Construe")
+                Text("Opens the popup from any app, including fullscreen ones.")
+            }
 
-            Toggle("Launch at login", isOn: $launchAtLogin)
+            Toggle(isOn: $launchAtLogin) {
+                Text("Launch at login")
+                Text("Starts Construe in the menu bar when you log in.")
+            }
                 .onChange(of: launchAtLogin) { _, enabled in
                     updateLaunchAtLogin(enabled)
                 }
@@ -66,10 +72,16 @@ struct ClaudeSettingsView: View {
     var body: some View {
         Form {
             Section {
-                SecureField("API key", text: $apiKey, prompt: Text("sk-ant-…"))
-                    .onChange(of: apiKey) { _, newValue in
-                        saveAPIKey(newValue)
-                    }
+                LabeledContent {
+                    SecureField("API key", text: $apiKey, prompt: Text("sk-ant-…"))
+                        .labelsHidden()
+                        .onChange(of: apiKey) { _, newValue in
+                            saveAPIKey(newValue)
+                        }
+                } label: {
+                    Text("API key")
+                    Text("Stored in your Keychain. Usage is billed to your Claude Console account.")
+                }
                 if let apiKeyError {
                     Text(apiKeyError)
                         .font(.caption)
@@ -79,26 +91,32 @@ struct ClaudeSettingsView: View {
                     Link("Get an API key in the Claude Console", destination: consoleURL)
                         .font(.caption)
                 }
-            } footer: {
-                Text("Stored in your Keychain.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
             }
 
             Section("Model") {
-                HStack {
-                    TextField("Model", text: $settings.model)
-                    Menu("Presets") {
-                        ForEach(AppSettings.modelPresets, id: \.id) { preset in
-                            Button(preset.name) { settings.model = preset.id }
+                LabeledContent {
+                    HStack {
+                        TextField("Model", text: $settings.model)
+                            .labelsHidden()
+                        Menu("Presets") {
+                            ForEach(AppSettings.modelPresets, id: \.id) { preset in
+                                Button(preset.name) { settings.model = preset.id }
+                            }
                         }
+                        .fixedSize()
                     }
-                    .fixedSize()
+                } label: {
+                    Text("Model")
+                    Text("Any Messages API model ID; Presets lists the current models.")
                 }
-                Picker("Effort", selection: $settings.effort) {
+                Picker(selection: $settings.effort) {
                     ForEach(Effort.allCases) { effort in
                         Text(effort.label).tag(effort)
                     }
+                } label: {
+                    Text("Effort")
+                    Text("How much the model reasons before answering. Lower is faster and cheaper. "
+                        + "Haiku 4.5 needs Model default.")
                 }
                 Toggle(isOn: $settings.fastMode) {
                     Text("Fast mode")
@@ -109,24 +127,21 @@ struct ClaudeSettingsView: View {
                 .disabled(!AnthropicClient.fastModeModels.contains(settings.model))
             }
 
-            Section("System prompt") {
-                TextEditor(text: $settings.systemPrompt)
-                    .font(.body)
-                    .frame(height: 200)
-                Button("Reset to default") {
-                    settings.systemPrompt = AppSettings.defaultSystemPrompt
-                }
-                .disabled(settings.systemPrompt == AppSettings.defaultSystemPrompt)
-            }
-
             Section("Screenshots") {
-                Toggle("Attach screenshot image to the request", isOn: $settings.sendImage)
-                Picker("Text recognition language", selection: $settings.ocrLanguage) {
+                Toggle(isOn: $settings.sendImage) {
+                    Text("Attach screenshot image to the request")
+                    Text("Lets Claude correct text-recognition mistakes, at a small extra cost per request. "
+                        + "When off, only the recognized text is sent.")
+                }
+                Picker(selection: $settings.ocrLanguage) {
                     Text("Automatic").tag(String?.none)
                     Divider()
                     ForEach(Self.ocrLanguages, id: \.id) { language in
                         Text(language.name).tag(String?.some(language.id))
                     }
+                } label: {
+                    Text("Text recognition language")
+                    Text("Recognition runs on your Mac. Choose a language if Automatic misreads text.")
                 }
             }
         }
@@ -157,6 +172,32 @@ struct ClaudeSettingsView: View {
         .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
 }
 
+struct PromptSettingsView: View {
+    @Bindable var settings: AppSettings
+
+    var body: some View {
+        Form {
+            Section {
+                TextEditor(text: $settings.systemPrompt)
+                    .font(.body)
+                    .frame(height: 320)
+                Button("Reset to default") {
+                    settings.systemPrompt = AppSettings.defaultSystemPrompt
+                }
+                .disabled(settings.systemPrompt == AppSettings.defaultSystemPrompt)
+            } header: {
+                Text("System prompt")
+            } footer: {
+                Text("The instructions Claude follows for every request. To reuse a claude.ai Project, "
+                    + "paste its instructions here.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .settingsPane()
+    }
+}
+
 struct HandoffSettingsView: View {
     @Bindable var settings: AppSettings
     @Environment(\.openURL) private var openURL
@@ -164,11 +205,13 @@ struct HandoffSettingsView: View {
     var body: some View {
         Form {
             Section {
-                TextField("Project ID", text: $settings.projectID, prompt: Text("Optional"))
-            } footer: {
-                Text("The ID from a claude.ai Project URL (claude.ai/project/<ID>). Leave empty to open a plain new chat.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                LabeledContent {
+                    TextField("Project ID", text: $settings.projectID, prompt: Text("Optional"))
+                        .labelsHidden()
+                } label: {
+                    Text("Project ID")
+                    Text("Handoffs open in this claude.ai Project (claude.ai/project/<ID>). Empty: plain new chat.")
+                }
             }
 
             Section {
@@ -210,6 +253,10 @@ struct HandoffSettingsView: View {
 
 #Preview("Claude") {
     ClaudeSettingsView(settings: AppSettings(defaults: UserDefaults(suiteName: "preview") ?? .standard))
+}
+
+#Preview("Prompt") {
+    PromptSettingsView(settings: AppSettings(defaults: UserDefaults(suiteName: "preview") ?? .standard))
 }
 
 #Preview("Handoff") {

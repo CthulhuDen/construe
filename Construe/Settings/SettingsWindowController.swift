@@ -28,6 +28,7 @@ final class SettingsWindowController {
         tabs.tabStyle = .toolbar
         tabs.addTabViewItem(tab(GeneralSettingsView(), label: "General", symbol: "gearshape"))
         tabs.addTabViewItem(tab(ClaudeSettingsView(settings: settings), label: "Claude", symbol: "sparkles"))
+        tabs.addTabViewItem(tab(PromptSettingsView(settings: settings), label: "Prompt", symbol: "text.bubble"))
         tabs.addTabViewItem(tab(HandoffSettingsView(settings: settings), label: "Handoff", symbol: "arrow.up.forward.app"))
 
         let window = NSWindow(contentViewController: tabs)
