@@ -86,11 +86,6 @@ final class TranslationSession {
         }
     }
 
-    func cancel() {
-        task?.cancel()
-        task = nil
-    }
-
     private static func fastModeNotice(reportedSpeed: String?) -> String {
         let reported = reportedSpeed.map { "it reports speed “\($0)”" } ?? "it doesn't report a speed"
         return "Fast mode is on, but this response doesn't confirm it: \(reported)."

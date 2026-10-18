@@ -1,9 +1,12 @@
 import SwiftUI
+import Textual
 
 /// Content of the quick panel: the input field and the streamed response below it.
 struct QuickView: View {
     @Bindable var session: TranslationSession
     var openSettings: () -> Void
+    /// Reports the content's natural height so the panel can be resized to fit.
+    var onHeightChange: (CGFloat) -> Void = { _ in }
 
     @FocusState private var isInputFocused: Bool
     @State private var responseHeight: CGFloat = 0
@@ -34,7 +37,12 @@ struct QuickView: View {
         }
         .frame(width: PanelController.panelWidth)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
-        .onAppear { isInputFocused = true }
+        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { onHeightChange($0) }
+        // Keep the content pinned to the top while the panel catches up with a new height.
+        .frame(maxHeight: .infinity, alignment: .top)
+        .defaultFocus($isInputFocused, true)
+        // The panel becomes key right after the view appears; focusing a turn later makes it stick.
+        .onAppear { DispatchQueue.main.async { isInputFocused = true } }
     }
 
     private var showsResponseArea: Bool {
@@ -59,8 +67,9 @@ struct QuickView: View {
                     }
                 }
                 if !session.response.isEmpty {
-                    Text(session.response)
-                        .textSelection(.enabled)
+                    // Re-parsed on every streamed chunk; responses are short, so this stays cheap.
+                    StructuredText(markdown: session.response)
+                        .textual.textSelection(.enabled)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 ForEach(session.notices, id: \.self) { notice in
@@ -85,4 +94,18 @@ struct QuickView: View {
 
 #Preview {
     QuickView(session: TranslationSession(settings: AppSettings(defaults: UserDefaults(suiteName: "preview") ?? .standard)), openSettings: {})
+}
+
+#Preview("Markdown response") {
+    StructuredText(markdown: """
+        [Me](https://www.fbbva.es/diccionario/yo) [he](https://www.fbbva.es/diccionario/haber) \
+        [liado](https://www.fbbva.es/diccionario/liar) un poco.
+
+        Translation: I've messed up a bit.
+        - **liarse** (colloquial): to get muddled, to mess something up.
+        - *he liado*: present perfect, common in Spain for recent past actions.
+        """)
+        .textual.textSelection(.enabled)
+        .padding(16)
+        .frame(width: PanelController.panelWidth, alignment: .leading)
 }

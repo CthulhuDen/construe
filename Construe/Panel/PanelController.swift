@@ -5,9 +5,10 @@ import SwiftUI
 final class PanelController {
     static let panelWidth: CGFloat = 640
 
-    private let settings: AppSettings
     private let openSettings: () -> Void
-    private var session: TranslationSession?
+    /// One session for the app's lifetime, so the last reply survives closing the panel
+    /// (e.g. to follow a link) and is still there on the next invocation.
+    private let session: TranslationSession
 
     private lazy var panel: QuickPanel = {
         let panel = QuickPanel()
@@ -17,7 +18,7 @@ final class PanelController {
     }()
 
     init(settings: AppSettings, openSettings: @escaping () -> Void) {
-        self.settings = settings
+        self.session = TranslationSession(settings: settings)
         self.openSettings = openSettings
     }
 
@@ -26,15 +27,23 @@ final class PanelController {
     }
 
     func show() {
-        // A fresh session and hosting controller per show gives an empty input every time.
-        let session = TranslationSession(settings: settings)
-        self.session = session
-        let rootView = QuickView(session: session) { [weak self] in
-            self?.hide()
-            self?.openSettings()
-        }
+        // Each invocation starts with an empty input but keeps the previous reply.
+        session.input = ""
+        let rootView = QuickView(
+            session: session,
+            openSettings: { [weak self] in
+                self?.hide()
+                self?.openSettings()
+            },
+            onHeightChange: { [weak self] height in
+                // Resize on the next run loop turn, never inside the layout pass that reported the
+                // change: resizing the window during layout re-enters layout and can overflow the stack.
+                DispatchQueue.main.async { self?.resizePanel(toHeight: height) }
+            }
+        )
         let hostingController = NSHostingController(rootView: rootView)
-        hostingController.sizingOptions = [.preferredContentSize]
+        // The panel is sized explicitly from `onHeightChange`, not by the hosting controller.
+        hostingController.sizingOptions = []
         panel.contentViewController = hostingController
 
         let screen = NSScreen.screens.first { NSMouseInRect(NSEvent.mouseLocation, $0.frame, false) }
@@ -55,10 +64,17 @@ final class PanelController {
         panel.makeKeyAndOrderFront(nil)
     }
 
+    private func resizePanel(toHeight height: CGFloat) {
+        guard panel.isVisible, abs(panel.frame.height - height) > 0.5 else { return }
+        var frame = panel.frame
+        frame.size.height = height
+        // `QuickPanel` keeps the top edge fixed, so the panel grows downward.
+        panel.setFrame(frame, display: true)
+    }
+
     func hide() {
         guard panel.isVisible else { return }
-        session?.cancel()
-        session = nil
+        // A reply still streaming keeps going in the background and is shown on the next invocation.
         panel.orderOut(nil)
         panel.contentViewController = nil
     }
