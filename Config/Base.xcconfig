@@ -1,0 +1,9 @@
+// Shared build settings for all targets.
+//
+// Per-developer settings (DEVELOPMENT_TEAM, PRODUCT_BUNDLE_IDENTIFIER) go in
+// Local.xcconfig, which is git-ignored. Copy Local.xcconfig.example to get started.
+
+DEVELOPMENT_TEAM =
+PRODUCT_BUNDLE_IDENTIFIER = com.example.construe
+
+#include? "Local.xcconfig"

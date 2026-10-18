@@ -1,0 +1,6 @@
+// Copy to Local.xcconfig (git-ignored) and fill in your values.
+// Find your Team ID at https://developer.apple.com/account under Membership details.
+
+DEVELOPMENT_TEAM = YOUR_TEAM_ID
+// Bundle IDs are unique per team, so use your own reverse-DNS prefix.
+PRODUCT_BUNDLE_IDENTIFIER = com.yourname.construe
