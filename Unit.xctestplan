@@ -1,0 +1,24 @@
+{
+  "configurations" : [
+    {
+      "id" : "5B1E3C2A-7F4D-4E8B-9A61-2C3D4E5F6A7B",
+      "name" : "Default",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:Construe.xcodeproj",
+        "identifier" : "92F010743083E01E0006BFAA",
+        "name" : "ConstrueTests"
+      }
+    }
+  ],
+  "version" : 1
+}

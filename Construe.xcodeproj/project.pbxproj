@@ -6,9 +6,15 @@
 	objectVersion = 90;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		92F010643083DCB10006BFAA /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = 92F010633083DCB10006BFAA /* KeyboardShortcuts */; };
+		92F010673083DCCB0006BFAA /* Textual in Frameworks */ = {isa = PBXBuildFile; productRef = 92F010663083DCCB0006BFAA /* Textual */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		000000000000000000000120 /* Construe.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Construe.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		92F010563083D1790006BFAA /* Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Base.xcconfig; path = Config/Base.xcconfig; sourceTree = "<group>"; };
+		92F010753083E01E0006BFAA /* ConstrueTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ConstrueTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -30,10 +36,22 @@
 			path = Construe;
 			sourceTree = "<group>";
 		};
+		92F010763083E01E0006BFAA /* ConstrueTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = ConstrueTests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		000000000000000130000000 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+				92F010673083DCCB0006BFAA /* Textual in Frameworks */,
+				92F010643083DCB10006BFAA /* KeyboardShortcuts in Frameworks */,
+			);
+		};
+		92F010723083E01E0006BFAA /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
 			);
@@ -46,6 +64,7 @@
 			children = (
 				92F010563083D1790006BFAA /* Base.xcconfig */,
 				000000000000000000000010 /* Construe */,
+				92F010763083E01E0006BFAA /* ConstrueTests */,
 				000000000000000000000020 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -54,6 +73,7 @@
 			isa = PBXGroup;
 			children = (
 				000000000000000000000120 /* Construe.app */,
+				92F010753083E01E0006BFAA /* ConstrueTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -75,9 +95,31 @@
 				000000000000000000000010 /* Construe */,
 			);
 			name = Construe;
+			packageProductDependencies = (
+				92F010633083DCB10006BFAA /* KeyboardShortcuts */,
+				92F010663083DCCB0006BFAA /* Textual */,
+			);
 			productName = MyApp;
 			productReference = 000000000000000000000120 /* Construe.app */;
 			productType = "com.apple.product-type.application";
+		};
+		92F010743083E01E0006BFAA /* ConstrueTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 92F010793083E01E0006BFAA /* Build configuration list for PBXNativeTarget "ConstrueTests" */;
+			buildPhases = (
+				92F010713083E01E0006BFAA /* Sources */,
+				92F010723083E01E0006BFAA /* Frameworks */,
+				92F010733083E01E0006BFAA /* Resources */,
+			);
+			buildRules = (
+			);
+			fileSystemSynchronizedGroups = (
+				92F010763083E01E0006BFAA /* ConstrueTests */,
+			);
+			name = ConstrueTests;
+			productName = ConstrueTests;
+			productReference = 92F010753083E01E0006BFAA /* ConstrueTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
 
@@ -86,11 +128,14 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 2630;
+				LastSwiftUpdateCheck = 2710;
 				LastUpgradeCheck = 2700;
 				TargetAttributes = {
 					000000000000000100000000 = {
 						CreatedOnToolsVersion = 26.3;
+					};
+					92F010743083E01E0006BFAA = {
+						CreatedOnToolsVersion = 27.1;
 					};
 				};
 			};
@@ -103,12 +148,17 @@
 			);
 			mainGroup = 000000000000000000000001;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				92F010623083DCB10006BFAA /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */,
+				92F010653083DCCB0006BFAA /* XCRemoteSwiftPackageReference "textual" */,
+			);
 			preferredProjectObjectVersion = 90;
 			productRefGroup = 000000000000000000000020 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				000000000000000100000000 /* Construe */,
+				92F010743083E01E0006BFAA /* ConstrueTests */,
 			);
 		};
 /* End PBXProject section */
@@ -119,10 +169,20 @@
 			files = (
 			);
 		};
+		92F010733083E01E0006BFAA /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		000000000000000120000000 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
+		92F010713083E01E0006BFAA /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			files = (
 			);
@@ -267,9 +327,11 @@
 		000000000000000111000000 /* Debug configuration for PBXNativeTarget "Construe" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Construe/Construe.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
 				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
@@ -301,9 +363,9 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
-				SDKROOT = auto;
+				SDKROOT = macosx;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTED_PLATFORMS = macosx;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -316,9 +378,11 @@
 		000000000000000112000000 /* Release configuration for PBXNativeTarget "Construe" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Construe/Construe.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
 				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
@@ -350,15 +414,57 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
-				SDKROOT = auto;
+				SDKROOT = macosx;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTED_PLATFORMS = macosx;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
+			};
+			name = Release;
+		};
+		92F0107A3083E01E0006BFAA /* Debug configuration for PBXNativeTarget "ConstrueTests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(inherited).tests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Construe.app/Contents/MacOS/Construe";
+			};
+			name = Debug;
+		};
+		92F0107B3083E01E0006BFAA /* Release configuration for PBXNativeTarget "ConstrueTests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(inherited).tests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Construe.app/Contents/MacOS/Construe";
 			};
 			name = Release;
 		};
@@ -381,7 +487,47 @@
 			);
 			defaultConfigurationName = Release;
 		};
+		92F010793083E01E0006BFAA /* Build configuration list for PBXNativeTarget "ConstrueTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				92F0107A3083E01E0006BFAA /* Debug configuration for PBXNativeTarget "ConstrueTests" */,
+				92F0107B3083E01E0006BFAA /* Release configuration for PBXNativeTarget "ConstrueTests" */,
+			);
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		92F010623083DCB10006BFAA /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sindresorhus/KeyboardShortcuts";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.1.0;
+			};
+		};
+		92F010653083DCCB0006BFAA /* XCRemoteSwiftPackageReference "textual" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/gonzalezreal/textual";
+			requirement = {
+				kind = upToNextMinorVersion;
+				minimumVersion = 0.5.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		92F010633083DCB10006BFAA /* KeyboardShortcuts */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 92F010623083DCB10006BFAA /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */;
+			productName = KeyboardShortcuts;
+		};
+		92F010663083DCCB0006BFAA /* Textual */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 92F010653083DCCB0006BFAA /* XCRemoteSwiftPackageReference "textual" */;
+			productName = Textual;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 000000000000000000000000 /* Project object */;
 }
