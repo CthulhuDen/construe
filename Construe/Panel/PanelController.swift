@@ -5,6 +5,10 @@ import SwiftUI
 final class PanelController {
     static let panelWidth: CGFloat = 640
 
+    private let settings: AppSettings
+    private let openSettings: () -> Void
+    private var session: TranslationSession?
+
     private lazy var panel: QuickPanel = {
         let panel = QuickPanel()
         panel.onCancel = { [weak self] in self?.hide() }
@@ -12,13 +16,24 @@ final class PanelController {
         return panel
     }()
 
+    init(settings: AppSettings, openSettings: @escaping () -> Void) {
+        self.settings = settings
+        self.openSettings = openSettings
+    }
+
     func toggle() {
         panel.isVisible ? hide() : show()
     }
 
     func show() {
-        // A fresh hosting controller per show gives an empty input every time.
-        let hostingController = NSHostingController(rootView: QuickView())
+        // A fresh session and hosting controller per show gives an empty input every time.
+        let session = TranslationSession(settings: settings)
+        self.session = session
+        let rootView = QuickView(session: session) { [weak self] in
+            self?.hide()
+            self?.openSettings()
+        }
+        let hostingController = NSHostingController(rootView: rootView)
         hostingController.sizingOptions = [.preferredContentSize]
         panel.contentViewController = hostingController
 
@@ -42,6 +57,8 @@ final class PanelController {
 
     func hide() {
         guard panel.isVisible else { return }
+        session?.cancel()
+        session = nil
         panel.orderOut(nil)
         panel.contentViewController = nil
     }

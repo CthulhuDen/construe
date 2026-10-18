@@ -48,6 +48,7 @@ final class AppSettings {
         static let handoffPreamble = "handoffPreamble"
         static let sendImage = "sendImage"
         static let ocrLanguage = "ocrLanguage"
+        static let fastMode = "fastMode"
     }
 
     @ObservationIgnored private let defaults: UserDefaults
@@ -83,6 +84,11 @@ final class AppSettings {
         didSet { defaults.set(ocrLanguage, forKey: Key.ocrLanguage) }
     }
 
+    /// Requests faster output at premium pricing. Only applied to models that support it.
+    var fastMode: Bool {
+        didSet { defaults.set(fastMode, forKey: Key.fastMode) }
+    }
+
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         model = defaults.string(forKey: Key.model) ?? Self.defaultModel
@@ -92,5 +98,6 @@ final class AppSettings {
         handoffPreamble = defaults.string(forKey: Key.handoffPreamble) ?? Self.defaultHandoffPreamble
         sendImage = defaults.object(forKey: Key.sendImage) as? Bool ?? true
         ocrLanguage = defaults.string(forKey: Key.ocrLanguage)
+        fastMode = defaults.bool(forKey: Key.fastMode)
     }
 }

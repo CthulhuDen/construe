@@ -13,6 +13,11 @@
   },
   "testTargets" : [
     {
+      "skippedTags" : {
+        "tags" : [
+          ".integration"
+        ]
+      },
       "target" : {
         "containerPath" : "container:Construe.xcodeproj",
         "identifier" : "92F010743083E01E0006BFAA",

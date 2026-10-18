@@ -4,3 +4,6 @@
 DEVELOPMENT_TEAM = YOUR_TEAM_ID
 // Bundle IDs are unique per team, so use your own reverse-DNS prefix.
 PRODUCT_BUNDLE_IDENTIFIER = com.yourname.construe
+
+// Optional: an Anthropic API key for the Integration test plan (a dedicated key with a low spend limit).
+// ANTHROPIC_API_KEY = sk-ant-...

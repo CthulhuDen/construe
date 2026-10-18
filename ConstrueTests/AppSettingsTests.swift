@@ -23,6 +23,7 @@ struct AppSettingsTests {
         #expect(settings.handoffPreamble == AppSettings.defaultHandoffPreamble)
         #expect(settings.sendImage)
         #expect(settings.ocrLanguage == nil)
+        #expect(settings.fastMode == false)
     }
 
     @Test func changesPersistAcrossInstances() {
@@ -34,6 +35,7 @@ struct AppSettingsTests {
         settings.handoffPreamble = "Custom preamble"
         settings.sendImage = false
         settings.ocrLanguage = "es"
+        settings.fastMode = true
 
         let reloaded = AppSettings(defaults: defaults)
 
@@ -44,6 +46,7 @@ struct AppSettingsTests {
         #expect(reloaded.handoffPreamble == "Custom preamble")
         #expect(reloaded.sendImage == false)
         #expect(reloaded.ocrLanguage == "es")
+        #expect(reloaded.fastMode)
     }
 
     @Test func ocrLanguageCanBeResetToAutomatic() {

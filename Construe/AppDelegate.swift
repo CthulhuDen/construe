@@ -8,8 +8,10 @@ extension KeyboardShortcuts.Name {
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let settings = AppSettings()
-    let panelController = PanelController()
     lazy var settingsController = SettingsWindowController(settings: settings)
+    lazy var panelController = PanelController(settings: settings) { [weak self] in
+        self?.settingsController.show()
+    }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         KeyboardShortcuts.onKeyUp(for: .togglePanel) { [weak self] in

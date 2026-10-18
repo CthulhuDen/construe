@@ -1,0 +1,39 @@
+{
+  "configurations" : [
+    {
+      "id" : "8C2F4A1D-3B6E-4F7A-9D1C-5E2B7A8C9D0E",
+      "name" : "Default",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "environmentVariableEntries" : [
+      {
+        "key" : "ANTHROPIC_API_KEY",
+        "value" : "$(ANTHROPIC_API_KEY)"
+      }
+    ],
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:Construe.xcodeproj",
+      "identifier" : "000000000000000100000000",
+      "name" : "Construe"
+    }
+  },
+  "testTargets" : [
+    {
+      "selectedTags" : {
+        "tags" : [
+          ".integration"
+        ]
+      },
+      "target" : {
+        "containerPath" : "container:Construe.xcodeproj",
+        "identifier" : "92F010743083E01E0006BFAA",
+        "name" : "ConstrueTests"
+      }
+    }
+  ],
+  "version" : 2
+}

@@ -11,6 +11,16 @@
 		92F010673083DCCB0006BFAA /* Textual in Frameworks */ = {isa = PBXBuildFile; productRef = 92F010663083DCCB0006BFAA /* Textual */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		92F0109A3083E01E0006BFAA /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 000000000000000000000000 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 000000000000000100000000;
+			remoteInfo = Construe;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		000000000000000000000120 /* Construe.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Construe.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		92F010563083D1790006BFAA /* Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Base.xcconfig; path = Config/Base.xcconfig; sourceTree = "<group>"; };
@@ -113,6 +123,9 @@
 			);
 			buildRules = (
 			);
+			dependencies = (
+				92F0109B3083E01E0006BFAA /* PBXTargetDependency */,
+			);
 			fileSystemSynchronizedGroups = (
 				92F010763083E01E0006BFAA /* ConstrueTests */,
 			);
@@ -188,6 +201,14 @@
 			);
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		92F0109B3083E01E0006BFAA /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 000000000000000100000000 /* Construe */;
+			targetProxy = 92F0109A3083E01E0006BFAA /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		000000000000000011000000 /* Debug configuration for PBXProject "Construe" */ = {

@@ -100,12 +100,19 @@ struct ClaudeSettingsView: View {
                         Text(effort.label).tag(effort)
                     }
                 }
+                Toggle(isOn: $settings.fastMode) {
+                    Text("Fast mode")
+                    Text(AnthropicClient.fastModeModels.contains(settings.model)
+                        ? "Up to 2.5× faster output at twice the price. Research preview."
+                        : "Not available for this model; only Opus 5.5, Opus 5 and Opus 4.8 support it.")
+                }
+                .disabled(!AnthropicClient.fastModeModels.contains(settings.model))
             }
 
             Section("System prompt") {
                 TextEditor(text: $settings.systemPrompt)
                     .font(.body)
-                    .frame(minHeight: 120)
+                    .frame(height: 200)
                 Button("Reset to default") {
                     settings.systemPrompt = AppSettings.defaultSystemPrompt
                 }
@@ -166,7 +173,7 @@ struct HandoffSettingsView: View {
             Section("Preamble") {
                 TextEditor(text: $settings.handoffPreamble)
                     .font(.body)
-                    .frame(minHeight: 60)
+                    .frame(height: 80)
                 Button("Reset to default") {
                     settings.handoffPreamble = AppSettings.defaultHandoffPreamble
                 }

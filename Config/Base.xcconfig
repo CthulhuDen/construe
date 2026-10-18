@@ -6,4 +6,7 @@
 DEVELOPMENT_TEAM =
 PRODUCT_BUNDLE_IDENTIFIER = com.example.construe
 
+// Anthropic API key for the Integration test plan only; the app itself uses the Keychain.
+ANTHROPIC_API_KEY =
+
 #include? "Local.xcconfig"

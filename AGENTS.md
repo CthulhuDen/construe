@@ -13,3 +13,4 @@ Rules:
 - Picking a team in Xcode's Signing & Capabilities tab writes it back into `project.pbxproj`. If that happens, remove it before committing.
 - Never commit `Config/Local.xcconfig`. Check `git status` before committing, because Xcode auto-stages new files.
 - New per-developer settings (e.g. app group or iCloud container IDs) go in the same place: a placeholder in `Base.xcconfig` and the real value in `Local.xcconfig`, plus the example file.
+- `ANTHROPIC_API_KEY` (optional) follows the same pattern. Only the `Integration` test plan reads it, passing it to the tests as an environment variable; the app itself stores its key in the Keychain. Never put a real key anywhere but `Local.xcconfig`.
