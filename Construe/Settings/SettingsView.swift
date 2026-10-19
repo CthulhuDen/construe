@@ -1,4 +1,5 @@
 import KeyboardShortcuts
+import OSLog
 import ServiceManagement
 import SwiftUI
 import Vision
@@ -20,6 +21,7 @@ extension View {
 struct GeneralSettingsView: View {
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
     @State private var launchAtLoginError: String?
+    @State private var diagnosticsStatus: String?
 
     var body: some View {
         Form {
@@ -60,8 +62,33 @@ struct GeneralSettingsView: View {
                     Text("Re-grabs the last region and opens the popup from any app. Clear it to turn it off.")
                 }
             }
+
+            Section("Diagnostics") {
+                LabeledContent {
+                    Button("Copy Diagnostics", action: copyDiagnostics)
+                } label: {
+                    Text("Diagnostics")
+                    Text("Copies the last hour of Construe's log to the clipboard for a bug report. Your text is redacted.")
+                }
+                if let diagnosticsStatus {
+                    Text(diagnosticsStatus)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
         }
         .settingsPane()
+    }
+
+    private func copyDiagnostics() {
+        do {
+            let (text, count) = try Diagnostics.recentEntries()
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(text, forType: .string)
+            diagnosticsStatus = "Copied \(count) log entries."
+        } catch {
+            diagnosticsStatus = "Couldn't read the log: \(error.localizedDescription)"
+        }
     }
 
     private func updateLaunchAtLogin(_ enabled: Bool) {
@@ -71,8 +98,10 @@ struct GeneralSettingsView: View {
             } else {
                 try SMAppService.mainApp.unregister()
             }
+            Logger.settings.info("Launch at login \(enabled ? "enabled" : "disabled", privacy: .public)")
             launchAtLoginError = nil
         } catch {
+            Logger.settings.error("Launch at login change failed: \(error.localizedDescription, privacy: .public)")
             launchAtLoginError = error.localizedDescription
         }
         launchAtLogin = SMAppService.mainApp.status == .enabled
@@ -168,11 +197,14 @@ struct ClaudeSettingsView: View {
         do {
             if trimmed.isEmpty {
                 try KeychainStore.apiKey.delete()
+                Logger.settings.info("API key deleted")
             } else {
                 try KeychainStore.apiKey.save(trimmed)
+                Logger.settings.info("API key saved")
             }
             apiKeyError = nil
         } catch {
+            Logger.settings.error("API key change failed: \(error.localizedDescription, privacy: .public)")
             apiKeyError = error.localizedDescription
         }
     }

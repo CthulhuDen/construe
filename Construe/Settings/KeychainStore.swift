@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 import Security
 
 struct KeychainError: LocalizedError {
@@ -42,8 +43,12 @@ struct KeychainStore {
             var item = baseQuery
             item[kSecValueData as String] = data
             let addStatus = SecItemAdd(item as CFDictionary, nil)
-            guard addStatus == errSecSuccess else { throw KeychainError(status: addStatus) }
+            guard addStatus == errSecSuccess else {
+                Logger.settings.error("Keychain add failed: OSStatus \(addStatus)")
+                throw KeychainError(status: addStatus)
+            }
         } else if status != errSecSuccess {
+            Logger.settings.error("Keychain update failed: OSStatus \(status)")
             throw KeychainError(status: status)
         }
     }
@@ -51,6 +56,7 @@ struct KeychainStore {
     func delete() throws {
         let status = SecItemDelete(baseQuery as CFDictionary)
         guard status == errSecSuccess || status == errSecItemNotFound else {
+            Logger.settings.error("Keychain delete failed: OSStatus \(status)")
             throw KeychainError(status: status)
         }
     }

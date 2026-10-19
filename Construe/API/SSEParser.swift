@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 
 /// An event from a streamed Messages API response that the app cares about.
 enum StreamEvent: Equatable {
@@ -55,7 +56,13 @@ enum SSEParser {
     static func events(fromLine line: String) throws -> [StreamEvent] {
         guard line.hasPrefix("data:") else { return [] }
         let json = line.dropFirst("data:".count).trimmingCharacters(in: .whitespaces)
-        guard let payload = try? JSONDecoder().decode(Payload.self, from: Data(json.utf8)) else { return [] }
+        let payload: Payload
+        do {
+            payload = try JSONDecoder().decode(Payload.self, from: Data(json.utf8))
+        } catch {
+            Logger.api.error("Undecodable SSE data line: \(error, privacy: .public)")
+            return []
+        }
 
         switch payload.type {
         case "message_start":
@@ -71,6 +78,9 @@ enum SSEParser {
             events.append(.stop(reason: payload.delta?.stopReason))
             return events
         case "error":
+            Logger.api.error(
+                "Stream error event: \(payload.error?.type ?? "error", privacy: .public): \(payload.error?.message ?? "", privacy: .public)"
+            )
             throw ClaudeError.stream(
                 type: payload.error?.type ?? "error",
                 message: payload.error?.message ?? "Unknown streaming error"

@@ -1,6 +1,7 @@
 import CoreGraphics
 import Foundation
 import Observation
+import OSLog
 
 /// State of one popup session: the input, the streamed response, and the request in flight.
 @Observable
@@ -71,16 +72,21 @@ final class TranslationSession {
         imageNotice = nil
         isReadingImage = true
         defer { isReadingImage = false }
+        Logger.ocr.info("Recognizing text in a \(image.width)x\(image.height) image, language \(self.settings.ocrLanguage ?? "automatic", privacy: .public)")
 
         do {
             let text = try await TextRecognizer.recognizeText(in: image, language: settings.ocrLanguage)
             guard !text.isEmpty else {
+                Logger.ocr.notice("No text found in the image")
                 imageNotice = "No text found in the screenshot."
                 return
             }
+            Logger.ocr.info("Recognized \(text.count) characters")
+            Logger.ocr.debug("Recognized text: \(text, privacy: .private)")
             let trimmed = input.trimmingCharacters(in: .whitespacesAndNewlines)
             input = trimmed.isEmpty ? text : trimmed + " " + text
         } catch {
+            Logger.ocr.error("Text recognition failed: \(error, privacy: .public)")
             imageNotice = "Couldn't read the screenshot: \(error.localizedDescription)"
         }
     }
@@ -99,6 +105,7 @@ final class TranslationSession {
     func send() {
         guard canSend else { return }
         guard let apiKey = apiKey(), !apiKey.isEmpty else {
+            Logger.api.notice("Send blocked: no API key")
             phase = .failed(ClaudeError.missingAPIKey.localizedDescription)
             return
         }
@@ -128,20 +135,26 @@ final class TranslationSession {
                     case let .speed(speed):
                         reportedSpeed = speed
                     case let .stop(reason):
+                        Logger.api.info("Stop reason: \(reason ?? "none", privacy: .public)")
                         if let notice = Self.notice(forStopReason: reason) {
+                            Logger.api.notice("\(notice, privacy: .public)")
                             notices.append(notice)
                         }
                     }
                 }
                 if expectsFastMode && reportedSpeed != "fast" {
-                    notices.append(Self.fastModeNotice(reportedSpeed: reportedSpeed))
+                    let notice = Self.fastModeNotice(reportedSpeed: reportedSpeed)
+                    Logger.api.notice("\(notice, privacy: .public)")
+                    notices.append(notice)
                 }
+                Logger.api.debug("Response: \(self.response, privacy: .private)")
                 phase = .done
             } catch is CancellationError {
                 phase = .idle
             } catch let error as URLError where error.code == .cancelled {
                 phase = .idle
             } catch {
+                Logger.api.error("Send failed: \(error.localizedDescription, privacy: .public)")
                 phase = .failed(error.localizedDescription)
             }
         }

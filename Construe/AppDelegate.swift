@@ -1,5 +1,6 @@
 import AppKit
 import KeyboardShortcuts
+import OSLog
 
 extension KeyboardShortcuts.Name {
     /// Global shortcut that shows or hides the quick panel.
@@ -21,6 +22,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
+        Logger.panel.info("Construe \(version, privacy: .public) launched")
         KeyboardShortcuts.onKeyUp(for: .togglePanel) { [weak self] in
             self?.panelController.toggle()
         }

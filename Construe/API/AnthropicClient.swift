@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 
 /// What to ask Claude: one user turn, optionally with a screenshot.
 struct MessageRequest {
@@ -32,26 +33,67 @@ struct AnthropicClient {
     func stream(_ request: MessageRequest, apiKey: String) -> AsyncThrowingStream<StreamEvent, Error> {
         AsyncThrowingStream { continuation in
             let task = Task {
+                let start = ContinuousClock.now
+                var lineCount = 0
+                var receivedCharacters = 0
                 do {
-                    let (bytes, response) = try await session.bytes(for: Self.urlRequest(for: request, apiKey: apiKey))
-                    let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+                    let urlRequest = try Self.urlRequest(for: request, apiKey: apiKey)
+                    Self.logRequest(request, urlRequest: urlRequest)
+                    let (bytes, response) = try await session.bytes(for: urlRequest)
+                    let httpResponse = response as? HTTPURLResponse
+                    let status = httpResponse?.statusCode ?? 0
+                    let requestID = httpResponse?.value(forHTTPHeaderField: "request-id") ?? "none"
+                    Logger.api.info(
+                        "Response: HTTP \(status), request-id \(requestID, privacy: .public), headers after \(ContinuousClock.now - start, privacy: .public)"
+                    )
                     guard status == 200 else {
                         var body = Data()
                         for try await byte in bytes { body.append(byte) }
+                        Logger.api.error("HTTP \(status) body: \(String(decoding: body, as: UTF8.self), privacy: .public)")
                         throw ClaudeError.fromResponse(status: status, body: body)
                     }
                     for try await line in bytes.lines {
+                        lineCount += 1
+                        Logger.api.debug("SSE: \(line, privacy: .private)")
                         for event in try SSEParser.events(fromLine: line) {
+                            if case let .text(chunk) = event {
+                                receivedCharacters += chunk.count
+                            }
                             continuation.yield(event)
                         }
                     }
+                    Logger.api.info(
+                        "Stream finished in \(ContinuousClock.now - start, privacy: .public): \(lineCount) SSE lines, \(receivedCharacters) characters"
+                    )
                     continuation.finish()
                 } catch {
+                    if error is CancellationError || (error as? URLError)?.code == .cancelled {
+                        Logger.api.info("Request cancelled after \(ContinuousClock.now - start, privacy: .public)")
+                    } else {
+                        Logger.api.error(
+                            "Request failed after \(ContinuousClock.now - start, privacy: .public): \(error.localizedDescription, privacy: .public) (\(String(describing: error), privacy: .public))"
+                        )
+                    }
                     continuation.finish(throwing: error)
                 }
             }
             continuation.onTermination = { _ in task.cancel() }
         }
+    }
+
+    /// Logs what is being sent, without the API key or the image data.
+    private static func logRequest(_ request: MessageRequest, urlRequest: URLRequest) {
+        let betas = urlRequest.value(forHTTPHeaderField: "anthropic-beta") ?? "none"
+        Logger.api.info(
+            """
+            Request: model \(request.model, privacy: .public), effort \(request.effort.rawValue, privacy: .public), \
+            max_tokens \(request.maxTokens), fast mode \(request.fastMode), betas \(betas, privacy: .public), \
+            input \(request.text.count) characters, system prompt \(request.systemPrompt.count) characters, \
+            image \(request.imagePNG?.count ?? 0) bytes
+            """
+        )
+        Logger.api.debug("Input: \(request.text, privacy: .private)")
+        Logger.api.debug("System prompt: \(request.systemPrompt, privacy: .private)")
     }
 
     /// Builds the HTTP request. Separate from `stream` so tests can inspect it.

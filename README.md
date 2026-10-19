@@ -67,6 +67,9 @@ keeps going in the background when you close the popup.
 - Grabbing a screen region needs the Screen Recording permission, which macOS asks for on first use. Construe captures
   only the region you selected, only when you ask, and handles it like a pasted screenshot.
 - Construe has no server and no analytics.
+- Construe logs to macOS unified logging (Console.app), which stays on your Mac. Your text, recognized text and replies
+  are logged as private, so they show as `<private>`; the API key is never logged. **Settings > General > Copy
+  Diagnostics** copies the last hour of the log for a bug report.
 
 ## Limitations
 
@@ -100,6 +103,7 @@ Xcode's automatic signing creates it. Per-developer values never go into `projec
 | `Construe/Capture` | Screen region selection overlay and ScreenCaptureKit capture |
 | `Construe/Handoff` | claude.ai link building, the only place that knows claude.ai URLs |
 | `Construe/Settings` | Settings model (UserDefaults), Keychain store, Settings window |
+| `Construe/Logging` | `os.Logger` categories and the Copy Diagnostics log reader |
 | `ConstrueTests` | Swift Testing suites |
 
 ### Tests

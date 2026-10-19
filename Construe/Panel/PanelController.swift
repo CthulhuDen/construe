@@ -1,5 +1,6 @@
 import AppKit
 import KeyboardShortcuts
+import OSLog
 import SwiftUI
 
 /// Owns the quick panel: showing, hiding and positioning it.
@@ -76,6 +77,7 @@ final class PanelController {
             )
         }
 
+        Logger.panel.debug("Panel shown")
         // Makes the panel key without activating Construe, so the previous app stays frontmost.
         panel.makeKeyAndOrderFront(nil)
     }
@@ -85,9 +87,11 @@ final class PanelController {
         hide()
         Task {
             guard let region = await RegionSelector.select() else {
+                Logger.capture.info("Region selection cancelled")
                 show(clearingInput: false)
                 return
             }
+            Logger.capture.debug("Region selected: \(String(describing: region), privacy: .public)")
             lastRegion = region
             show(clearingInput: false)
             await capture(region)
@@ -100,6 +104,7 @@ final class PanelController {
             show()
         }
         guard let lastRegion else {
+            Logger.capture.notice("Re-grab with no region yet")
             let hint = KeyboardShortcuts.Name.grabRegion.shortcut.map { "Press \($0) to select one." }
                 ?? "Use Grab region to select one."
             session.showImageNotice("No region yet. " + hint)
@@ -109,10 +114,13 @@ final class PanelController {
     }
 
     private func capture(_ region: CGRect) async {
+        Logger.capture.debug("Capturing region \(String(describing: region), privacy: .public)")
         do {
             let image = try await ScreenCapturer.capture(region)
+            Logger.capture.info("Captured a \(image.width)x\(image.height) image")
             await session.attachImage(image)
         } catch {
+            Logger.capture.error("Capture failed: \(error.localizedDescription, privacy: .public)")
             session.showImageNotice("Couldn't capture the region: \(error.localizedDescription)")
         }
     }
@@ -127,6 +135,7 @@ final class PanelController {
 
     func hide() {
         guard panel.isVisible else { return }
+        Logger.panel.debug("Panel hidden")
         // A reply still streaming keeps going in the background and is shown on the next invocation.
         panel.orderOut(nil)
         panel.contentViewController = nil
