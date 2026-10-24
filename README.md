@@ -36,7 +36,8 @@ foreign-language text and breaks down anything non-obvious.
 
 ## Getting started
 
-There is no prebuilt download yet; build it from source (see [Development](#development)).
+Download the `.dmg` of the latest release from the [Releases page](https://github.com/CthulhuDen/construe/releases)
+and copy Construe to your Applications folder, or build it from source (see [Development](#development)).
 
 1. Launch Construe. A speech-bubble icon appears in the menu bar; the app has no Dock icon.
 2. Open **Settings…** from the menu-bar icon.
