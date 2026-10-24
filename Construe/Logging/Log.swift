@@ -15,6 +15,8 @@ extension Logger {
     nonisolated static let capture = Logger(subsystem: subsystem, category: "capture")
     /// Text recognition in screenshots.
     nonisolated static let ocr = Logger(subsystem: subsystem, category: "ocr")
+    /// Listening, system audio capture and transcription.
+    nonisolated static let audio = Logger(subsystem: subsystem, category: "audio")
     /// Keychain and launch-at-login changes.
     nonisolated static let settings = Logger(subsystem: subsystem, category: "settings")
     /// App lifecycle and the quick panel.

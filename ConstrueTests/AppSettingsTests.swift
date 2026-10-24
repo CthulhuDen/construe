@@ -24,6 +24,9 @@ struct AppSettingsTests {
         #expect(settings.sendImage)
         #expect(settings.ocrLanguage == nil)
         #expect(settings.fastMode == false)
+        #expect(settings.speechLocale == nil)
+        #expect(settings.listeningBufferSeconds == 15)
+        #expect(settings.listeningAutoStopMinutes == 30)
     }
 
     @Test func changesPersistAcrossInstances() {
@@ -36,6 +39,9 @@ struct AppSettingsTests {
         settings.sendImage = false
         settings.ocrLanguage = "es"
         settings.fastMode = true
+        settings.speechLocale = "es-ES"
+        settings.listeningBufferSeconds = 30
+        settings.listeningAutoStopMinutes = 0
 
         let reloaded = AppSettings(defaults: defaults)
 
@@ -47,6 +53,9 @@ struct AppSettingsTests {
         #expect(reloaded.sendImage == false)
         #expect(reloaded.ocrLanguage == "es")
         #expect(reloaded.fastMode)
+        #expect(reloaded.speechLocale == "es-ES")
+        #expect(reloaded.listeningBufferSeconds == 30)
+        #expect(reloaded.listeningAutoStopMinutes == 0)
     }
 
     @Test func ocrLanguageCanBeResetToAutomatic() {

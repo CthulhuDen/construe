@@ -26,6 +26,8 @@ enum Effort: String, CaseIterable, Identifiable {
 final class AppSettings {
     static let defaultModel = "claude-opus-5-5"
     static let defaultEffort = Effort.medium
+    static let defaultListeningBufferSeconds = 15
+    static let defaultListeningAutoStopMinutes = 30
     static let defaultSystemPrompt = """
         Explain the text the user sends. If it's in a foreign language, translate it, \
         then break down anything non-obvious: idioms, grammar, word choice and tone. Be concise.
@@ -62,6 +64,9 @@ final class AppSettings {
         static let sendImage = "sendImage"
         static let ocrLanguage = "ocrLanguage"
         static let fastMode = "fastMode"
+        static let speechLocale = "speechLocale"
+        static let listeningBufferSeconds = "listeningBufferSeconds"
+        static let listeningAutoStopMinutes = "listeningAutoStopMinutes"
     }
 
     @ObservationIgnored private let defaults: UserDefaults
@@ -103,6 +108,21 @@ final class AppSettings {
         didSet { defaults.set(fastMode, forKey: Key.fastMode) }
     }
 
+    /// BCP-47 language for speech recognition (e.g. "es-ES"), or `nil` for the system language.
+    var speechLocale: String? {
+        didSet { defaults.set(speechLocale, forKey: Key.speechLocale) }
+    }
+
+    /// Seconds of sound kept while listening. Applies the next time listening starts.
+    var listeningBufferSeconds: Int {
+        didSet { defaults.set(listeningBufferSeconds, forKey: Key.listeningBufferSeconds) }
+    }
+
+    /// Minutes of silence after which listening stops; 0 means never.
+    var listeningAutoStopMinutes: Int {
+        didSet { defaults.set(listeningAutoStopMinutes, forKey: Key.listeningAutoStopMinutes) }
+    }
+
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         model = defaults.string(forKey: Key.model) ?? Self.defaultModel
@@ -113,5 +133,10 @@ final class AppSettings {
         sendImage = defaults.object(forKey: Key.sendImage) as? Bool ?? true
         ocrLanguage = defaults.string(forKey: Key.ocrLanguage)
         fastMode = defaults.bool(forKey: Key.fastMode)
+        speechLocale = defaults.string(forKey: Key.speechLocale)
+        listeningBufferSeconds = defaults.object(forKey: Key.listeningBufferSeconds) as? Int
+            ?? Self.defaultListeningBufferSeconds
+        listeningAutoStopMinutes = defaults.object(forKey: Key.listeningAutoStopMinutes) as? Int
+            ?? Self.defaultListeningAutoStopMinutes
     }
 }

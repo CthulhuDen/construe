@@ -12,12 +12,15 @@ extension KeyboardShortcuts.Name {
     /// Global shortcut that captures the last region again and opens the panel. Shares its default
     /// with `regrabRegion`, so the same key works everywhere.
     static let globalRegrab = Self("globalRegrab", initial: .init(.c, modifiers: [.control, .option]))
+    /// Global shortcut that starts or stops listening to system audio.
+    static let toggleListening = Self("toggleListening", initial: .init(.l, modifiers: [.control, .option]))
 }
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let settings = AppSettings()
     lazy var settingsController = SettingsWindowController(settings: settings)
-    lazy var panelController = PanelController(settings: settings) { [weak self] in
+    lazy var listener = AudioListener(settings: settings)
+    lazy var panelController = PanelController(settings: settings, listener: listener) { [weak self] in
         self?.settingsController.show()
     }
 
@@ -29,6 +32,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         KeyboardShortcuts.onKeyUp(for: .globalRegrab) { [weak self] in
             self?.panelController.regrabRegion()
+        }
+        KeyboardShortcuts.onKeyUp(for: .toggleListening) { [weak self] in
+            self?.panelController.toggleListening()
         }
     }
 }

@@ -11,6 +11,9 @@ final class PanelController {
     /// One session for the app's lifetime, so the last reply survives closing the panel
     /// (e.g. to follow a link) and is still there on the next invocation.
     private let session: TranslationSession
+    private let listener: AudioListener
+    /// Lives as long as the controller, so opening and closing the panel never creates or destroys an audio engine.
+    private let player = AudioClipPlayer()
     /// The last region grabbed from the screen, for Re-grab. Kept in memory only.
     private var lastRegion: CGRect?
 
@@ -21,26 +24,35 @@ final class PanelController {
         return panel
     }()
 
-    init(settings: AppSettings, openSettings: @escaping () -> Void) {
+    init(settings: AppSettings, listener: AudioListener, openSettings: @escaping () -> Void) {
         self.session = TranslationSession(settings: settings)
+        self.listener = listener
         self.openSettings = openSettings
     }
 
     func toggle() {
-        panel.isVisible ? hide() : show()
+        panel.isVisible ? hide() : show(catchingAudio: true)
     }
 
     /// `clearingInput: false` reopens the panel after a region grab without losing what was typed.
-    func show(clearingInput: Bool = true) {
+    /// `catchingAudio` transcribes the last seconds of sound into the input while listening; it's
+    /// set when the user opens the popup, not when another action (grab, re-grab) opens it.
+    func show(clearingInput: Bool = true, catchingAudio: Bool = false) {
         // Each invocation starts with an empty input but keeps the previous reply.
         if clearingInput {
             session.clearInput()
+        }
+        if catchingAudio {
+            catchAudio()
         }
         let rootView = QuickView(
             session: session,
             canRegrab: lastRegion != nil,
             grabRegion: { [weak self] in self?.grabRegion() },
             regrabRegion: { [weak self] in self?.regrabRegion() },
+            listener: listener,
+            toggleListening: { [weak self] in self?.toggleListening() },
+            player: player,
             openSettings: { [weak self] in
                 self?.hide()
                 self?.openSettings()
@@ -111,6 +123,48 @@ final class PanelController {
             return
         }
         Task { await capture(lastRegion) }
+    }
+
+    /// Starts or stops listening; a start failure is shown in the panel, opening it if it's closed.
+    func toggleListening() {
+        guard !listener.isListening else {
+            listener.stop()
+            return
+        }
+        Task {
+            do {
+                try await listener.start()
+            } catch {
+                Logger.audio.error("Listening failed to start: \(error.localizedDescription, privacy: .public)")
+                if !panel.isVisible {
+                    show()
+                }
+                session.showAudioNotice("Couldn't start listening: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    /// Transcribes the last seconds of sound into the input. When not listening, it only reports
+    /// once why listening stopped on its own, if it did.
+    private func catchAudio() {
+        guard listener.isListening else {
+            if let reason = listener.takeStopReason() {
+                session.showAudioNotice(reason)
+            }
+            return
+        }
+        guard !session.isTranscribing else { return }
+        Task {
+            do {
+                let samples = try await listener.recentAudio()
+                await session.attachAudio(samples, sampleRate: AudioRingBuffer.sampleRate) { samples in
+                    try await listener.transcribe(samples)
+                }
+            } catch {
+                Logger.audio.notice("Nothing to catch: \(error.localizedDescription, privacy: .public)")
+                session.showAudioNotice(error.localizedDescription)
+            }
+        }
     }
 
     private func capture(_ region: CGRect) async {

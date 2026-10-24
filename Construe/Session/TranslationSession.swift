@@ -20,6 +20,12 @@ final class TranslationSession {
     private(set) var isReadingImage = false
     /// Shown under the screenshot when no text could be recognized.
     private(set) var imageNotice: String?
+    /// Audio caught when the popup opened while listening, shown as a waveform under the input.
+    private(set) var audioClip: AudioClip?
+    /// True while caught audio is being transcribed.
+    private(set) var isTranscribing = false
+    /// Shown in the audio row, e.g. when listening couldn't start or nothing was recognized.
+    private(set) var audioNotice: String?
     private(set) var response = ""
     /// The text that produced `response`; the input is cleared on the next invocation, but the
     /// handoff still needs the phrase.
@@ -53,6 +59,8 @@ final class TranslationSession {
     func clearInput() {
         input = ""
         removeImage()
+        audioClip = nil
+        audioNotice = nil
     }
 
     func removeImage() {
@@ -83,12 +91,45 @@ final class TranslationSession {
             }
             Logger.ocr.info("Recognized \(text.count) characters")
             Logger.ocr.debug("Recognized text: \(text, privacy: .private)")
-            let trimmed = input.trimmingCharacters(in: .whitespacesAndNewlines)
-            input = trimmed.isEmpty ? text : trimmed + " " + text
+            appendToInput(text)
         } catch {
             Logger.ocr.error("Text recognition failed: \(error, privacy: .public)")
             imageNotice = "Couldn't read the screenshot: \(error.localizedDescription)"
         }
+    }
+
+    /// Shows `message` in the audio row, e.g. when listening couldn't start.
+    func showAudioNotice(_ message: String) {
+        audioNotice = message
+    }
+
+    /// Shows `samples` as a waveform and adds what `transcribe` recognizes in them to the input,
+    /// so it can be trimmed before sending.
+    func attachAudio(_ samples: [Float], sampleRate: Double, transcribe: ([Float]) async throws -> String) async {
+        audioClip = AudioClip(samples: samples, sampleRate: sampleRate)
+        audioNotice = nil
+        isTranscribing = true
+        defer { isTranscribing = false }
+        do {
+            let text = try await transcribe(samples)
+            guard !text.isEmpty else {
+                Logger.audio.notice("No speech recognized")
+                audioNotice = "No speech recognized."
+                return
+            }
+            Logger.audio.info("Transcribed \(text.count) characters")
+            Logger.audio.debug("Transcript: \(text, privacy: .private)")
+            appendToInput(text)
+        } catch {
+            Logger.audio.error("Transcription failed: \(error.localizedDescription, privacy: .public)")
+            audioNotice = error.localizedDescription
+        }
+    }
+
+    /// Appends `text` after what's already typed, so captured text adds to the input instead of replacing it.
+    private func appendToInput(_ text: String) {
+        let trimmed = input.trimmingCharacters(in: .whitespacesAndNewlines)
+        input = trimmed.isEmpty ? text : trimmed + " " + text
     }
 
     /// Link that continues the exchange in a new claude.ai chat, once there is a finished response.

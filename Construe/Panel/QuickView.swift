@@ -9,6 +9,10 @@ struct QuickView: View {
     var canRegrab = false
     var grabRegion: () -> Void = {}
     var regrabRegion: () -> Void = {}
+    var listener: AudioListener
+    var toggleListening: () -> Void = {}
+    /// Replays caught audio; owned by the controller so it outlives the view.
+    var player: AudioClipPlayer
     var openSettings: () -> Void
     /// Opens the handoff link and closes the panel.
     var continueInClaude: (URL) -> Void = { _ in }
@@ -48,6 +52,12 @@ struct QuickView: View {
                     .padding(.bottom, 12)
             }
 
+            if showsAudioRow {
+                audioRow
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 12)
+            }
+
             if showsResponseArea {
                 Divider()
                 responseArea
@@ -64,13 +74,18 @@ struct QuickView: View {
         .frame(maxHeight: .infinity, alignment: .top)
     }
 
-    /// Buttons that read text from a screen region, with their (changeable) panel shortcuts.
+    /// Buttons that read text from a screen region or from system audio, with their (changeable) shortcuts.
     private var captureRow: some View {
         HStack(spacing: 16) {
             captureButton("Grab region", systemImage: "rectangle.dashed", shortcut: .grabRegion, action: grabRegion)
             captureButton("Re-grab", systemImage: "arrow.clockwise", shortcut: .regrabRegion, action: regrabRegion)
                 .disabled(!canRegrab)
             Spacer()
+            if listener.isListening {
+                captureButton("Stop listening", systemImage: "stop.circle", shortcut: .toggleListening, action: toggleListening)
+            } else {
+                captureButton("Listen", systemImage: "ear", shortcut: .toggleListening, action: toggleListening)
+            }
         }
         .font(.callout)
     }
@@ -124,6 +139,77 @@ struct QuickView: View {
                 .buttonStyle(.plain)
                 .foregroundStyle(.secondary)
         }
+    }
+
+    private var showsAudioRow: Bool {
+        session.audioClip != nil || session.audioNotice != nil || (listener.isListening && listener.isPreparingModel)
+    }
+
+    /// Waveform of the caught audio (click to replay) with transcription or model status, or a
+    /// quiet notice when there was nothing to catch.
+    private var audioRow: some View {
+        HStack(spacing: 10) {
+            if let clip = session.audioClip {
+                waveform(clip)
+            }
+            Group {
+                if session.isTranscribing {
+                    HStack(spacing: 6) {
+                        ProgressView()
+                            .controlSize(.small)
+                        Text("Transcribing…")
+                    }
+                    .foregroundStyle(.secondary)
+                } else if let notice = session.audioNotice {
+                    Text(notice)
+                        .foregroundStyle(.tertiary)
+                } else if let clip = session.audioClip {
+                    Text("Caught \(clip.duration, format: .number.precision(.fractionLength(1))) s of audio.")
+                        .foregroundStyle(.secondary)
+                } else {
+                    HStack(spacing: 6) {
+                        ProgressView()
+                            .controlSize(.small)
+                        Text("Downloading the speech model…")
+                    }
+                    .foregroundStyle(.secondary)
+                }
+            }
+            .font(.callout)
+            Spacer()
+        }
+        .onDisappear { player.stop() }
+    }
+
+    private func waveform(_ clip: AudioClip) -> some View {
+        Button {
+            player.toggle(clip)
+        } label: {
+            Canvas { context, size in
+                let step = size.width / CGFloat(max(clip.levels.count, 1))
+                for (index, level) in clip.levels.enumerated() {
+                    let height = max(2, CGFloat(level) * size.height)
+                    let bar = CGRect(
+                        x: CGFloat(index) * step, y: (size.height - height) / 2,
+                        width: max(1, step - 1), height: height
+                    )
+                    context.fill(Path(roundedRect: bar, cornerRadius: 0.5), with: .foreground)
+                }
+            }
+            .foregroundStyle(player.isPlaying ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
+            .padding(.horizontal, 6)
+            .padding(.vertical, 4)
+            .frame(width: 120, height: 40)
+            .background(.quaternary, in: RoundedRectangle(cornerRadius: 4))
+            .overlay(alignment: .bottomTrailing) {
+                Image(systemName: player.isPlaying ? "stop.fill" : "play.fill")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .padding(3)
+            }
+        }
+        .buttonStyle(.plain)
+        .help(player.isPlaying ? "Stop" : "Replay the caught audio")
     }
 
     private var showsResponseArea: Bool {
@@ -184,7 +270,11 @@ struct QuickView: View {
 }
 
 #Preview {
-    QuickView(session: TranslationSession(settings: AppSettings(defaults: UserDefaults(suiteName: "preview") ?? .standard)), openSettings: {})
+    let settings = AppSettings(defaults: UserDefaults(suiteName: "preview") ?? .standard)
+    QuickView(
+        session: TranslationSession(settings: settings), listener: AudioListener(settings: settings),
+        player: AudioClipPlayer(), openSettings: {}
+    )
 }
 
 #Preview("Markdown response") {

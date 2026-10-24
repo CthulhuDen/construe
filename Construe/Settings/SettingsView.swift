@@ -1,6 +1,7 @@
 import KeyboardShortcuts
 import OSLog
 import ServiceManagement
+import Speech
 import SwiftUI
 import Vision
 
@@ -105,6 +106,76 @@ struct GeneralSettingsView: View {
             launchAtLoginError = error.localizedDescription
         }
         launchAtLogin = SMAppService.mainApp.status == .enabled
+    }
+}
+
+struct ListeningSettingsView: View {
+    @Bindable var settings: AppSettings
+    @State private var speechLanguages: [(id: String, name: String)] = []
+    @State private var speechModelStatus = ""
+
+    private static let autoStopOptions = [5, 10, 15, 30, 60]
+
+    var body: some View {
+        Form {
+            KeyboardShortcuts.Recorder(for: .toggleListening) {
+                Text("Start or stop listening")
+                Text("Keeps the last few seconds of sound your Mac plays in memory. Opening the popup "
+                    + "while listening transcribes them into the input.")
+            }
+            Picker(selection: $settings.speechLocale) {
+                Text("System (\(AudioListener.languageName(nil)))").tag(String?.none)
+                Divider()
+                ForEach(speechLanguages, id: \.id) { language in
+                    Text(language.name).tag(String?.some(language.id))
+                }
+            } label: {
+                Text("Language")
+                Text(speechModelStatus)
+            }
+            .task {
+                speechLanguages = await Self.loadSpeechLanguages()
+            }
+            .task(id: settings.speechLocale) {
+                speechModelStatus = await Self.speechModelStatus(for: settings.speechLocale)
+            }
+            Stepper(value: $settings.listeningBufferSeconds, in: 5...60, step: 5) {
+                Text("Keep the last \(settings.listeningBufferSeconds) seconds")
+                Text("Silence beyond a second isn't kept. Applies the next time you start listening.")
+            }
+            Picker(selection: $settings.listeningAutoStopMinutes) {
+                Text("Never").tag(0)
+                ForEach(Self.autoStopOptions, id: \.self) { minutes in
+                    Text("After \(minutes) minutes").tag(minutes)
+                }
+            } label: {
+                Text("Stop after silence")
+                Text("Stops listening once nothing has played for this long.")
+            }
+        }
+        .settingsPane()
+    }
+
+    /// Languages `SpeechTranscriber` supports, sorted by their localized display name.
+    private static func loadSpeechLanguages() async -> [(id: String, name: String)] {
+        await SpeechTranscriber.supportedLocales
+            .map { locale in
+                (locale.identifier(.bcp47), Locale.current.localizedString(forIdentifier: locale.identifier) ?? locale.identifier)
+            }
+            .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+    }
+
+    private static func speechModelStatus(for identifier: String?) async -> String {
+        guard let locale = await SpeechTranscriber.supportedLocale(equivalentTo: AudioListener.requestedLocale(identifier)) else {
+            return "Speech recognition doesn't support this language."
+        }
+        switch await AssetInventory.status(forModules: [SpeechTranscriber(locale: locale, preset: .transcription)]) {
+        case .installed: return "Recognition runs on your Mac. The speech model is installed."
+        case .downloading: return "Recognition runs on your Mac. The speech model is downloading."
+        case .supported: return "Recognition runs on your Mac. The speech model downloads the first time you listen."
+        case .unsupported: return "Speech recognition doesn't support this language."
+        @unknown default: return "Recognition runs on your Mac."
+        }
     }
 }
 
@@ -296,6 +367,10 @@ struct HandoffSettingsView: View {
         }
         .settingsPane()
     }
+}
+
+#Preview("Listening") {
+    ListeningSettingsView(settings: AppSettings(defaults: UserDefaults(suiteName: "preview") ?? .standard))
 }
 
 #Preview("Claude") {
