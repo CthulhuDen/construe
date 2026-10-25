@@ -48,6 +48,14 @@ struct AudioRingBufferTests {
         #expect(snapshot[Self.second..<(2 * Self.second)].allSatisfy { $0 == 0 })
     }
 
+    @Test func trailingSilenceTakesNoSpace() {
+        var buffer = AudioRingBuffer(capacity: 2 * Self.second)
+        let sound = sine(seconds: 3)
+        append(sound, to: &buffer)
+        append(silence(seconds: 0.5), to: &buffer)
+        #expect(buffer.snapshot() == Array(sound.suffix(2 * Self.second)))
+    }
+
     @Test func soundAfterLongSilenceResumesWriting() {
         var buffer = AudioRingBuffer(capacity: 10 * Self.second)
         append(silence(seconds: 5), to: &buffer)
