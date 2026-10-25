@@ -56,6 +56,7 @@ and copy Construe to your Applications folder, or build it from source (see [Dev
 | Re-grab the last region | ⌃⌥C, in the popup or from any app |
 | Start or stop listening | ⌃⌥L, the menu-bar menu, or Listen in the popup |
 | Continue in Claude | ⌘↩, or the button under a finished reply |
+| Open Settings | ⌘, in the popup, the menu-bar menu, or launching Construe again |
 | Close | Esc, or click anywhere else |
 
 The grab and re-grab shortcuts are changeable in Settings > General; clear the global re-grab there to give ⌃⌥C back to

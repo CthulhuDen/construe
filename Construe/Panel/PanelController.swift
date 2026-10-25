@@ -28,6 +28,12 @@ final class PanelController {
         self.session = TranslationSession(settings: settings)
         self.listener = listener
         self.openSettings = openSettings
+        // Registered only while the panel is shown; see `show()`.
+        KeyboardShortcuts.disable(.panelSettings)
+        KeyboardShortcuts.onKeyDown(for: .panelSettings) { [weak self] in
+            self?.hide()
+            self?.openSettings()
+        }
     }
 
     func toggle() {
@@ -92,6 +98,10 @@ final class PanelController {
         Logger.panel.debug("Panel shown")
         // Makes the panel key without activating Construe, so the previous app stays frontmost.
         panel.makeKeyAndOrderFront(nil)
+        // ⌘, as a global hotkey rather than a key event in the panel: the system lets Construe activate
+        // (to bring Settings to the front) in response to a hotkey, but not to a key press in a
+        // non-activating panel.
+        KeyboardShortcuts.enable(.panelSettings)
     }
 
     /// Hides the panel while the user drags out a region, then reopens it with the text read from it.
@@ -192,6 +202,7 @@ final class PanelController {
         Logger.panel.debug("Panel hidden")
         // A reply still streaming keeps going in the background and is shown on the next invocation.
         panel.orderOut(nil)
+        KeyboardShortcuts.disable(.panelSettings)
         panel.contentViewController = nil
     }
 }

@@ -14,6 +14,8 @@ extension KeyboardShortcuts.Name {
     static let globalRegrab = Self("globalRegrab", initial: .init(.c, modifiers: [.control, .option]))
     /// Global shortcut that starts or stops listening to system audio.
     static let toggleListening = Self("toggleListening", initial: .init(.l, modifiers: [.control, .option]))
+    /// In the panel only: open Settings. Fixed to ⌘, and not shown in Settings.
+    static let panelSettings = Self("panelSettings", initial: .init(.comma, modifiers: [.command]))
 }
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -36,5 +38,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         KeyboardShortcuts.onKeyUp(for: .toggleListening) { [weak self] in
             self?.panelController.toggleListening()
         }
+    }
+
+    /// Launching the already-running app (from Finder, Spotlight…) opens Settings, which is the way
+    /// back to them when the menu-bar item is hidden.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        settingsController.show()
+        return false
     }
 }

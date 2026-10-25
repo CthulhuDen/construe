@@ -5,17 +5,20 @@ struct ConstrueApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     var body: some Scene {
-        MenuBarExtra {
+        // `isInserted` keeps the app running when the user hides the item in System Settings; without
+        // it SwiftUI quits the app. Constant, so the item comes back when the user allows it again.
+        MenuBarExtra(isInserted: .constant(true)) {
             Button("Open Construe") {
                 appDelegate.panelController.show(catchingAudio: true)
             }
             Button(appDelegate.listener.isListening ? "Stop Listening" : "Start Listening") {
                 appDelegate.panelController.toggleListening()
             }
+            // No ⌘, here: a key press in this menu doesn't let Construe activate, so Settings would open
+            // behind the frontmost app. The panel handles ⌘, instead (see `PanelController.show()`).
             Button("Settings…") {
                 appDelegate.settingsController.show()
             }
-            .keyboardShortcut(",")
             Divider()
             Button("Quit Construe") {
                 NSApp.terminate(nil)
