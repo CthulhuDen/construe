@@ -8,7 +8,7 @@ struct InputTextView: NSViewRepresentable {
     @Binding var text: String
     var placeholder: String
     var font: NSFont = .preferredFont(forTextStyle: .title2)
-    var maxLines = 6
+    var maxLines = 4
     var onSubmit: () -> Void
     var onPasteImage: (CGImage) -> Void
 
@@ -40,7 +40,8 @@ struct InputTextView: NSViewRepresentable {
 
         let scrollView = NSScrollView()
         scrollView.documentView = textView
-        scrollView.hasVerticalScroller = true
+        // Turned on by `sizeThatFits` only once the text exceeds `maxLines`.
+        scrollView.hasVerticalScroller = false
         scrollView.autohidesScrollers = true
         scrollView.drawsBackground = false
         scrollView.borderType = .noBorder
@@ -65,7 +66,15 @@ struct InputTextView: NSViewRepresentable {
         let width = proposal.width ?? 400
         let lineHeight = layoutManager.defaultLineHeight(for: font)
         let textHeight = Self.textHeight(textView.string, font: font, width: width)
-        let height = min(max(textHeight, lineHeight), lineHeight * CGFloat(maxLines))
+        let maxHeight = lineHeight * CGFloat(maxLines)
+        // A legacy scroller ("Show scroll bars: Always") narrows the text, so with auto-hide a
+        // momentary overflow would show it, rewrap the text into an extra line and keep it shown.
+        // Measured without a scroller, text within `maxLines` fits as is; text beyond it still
+        // needs more than `maxLines` once narrowed. Probe widths (see `textHeight`) are skipped.
+        if let proposed = proposal.width, proposed > 0, proposed.isFinite {
+            nsView.hasVerticalScroller = textHeight > maxHeight
+        }
+        let height = min(max(textHeight, lineHeight), maxHeight)
         return CGSize(width: width, height: height.rounded(.up))
     }
 
