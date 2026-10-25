@@ -130,7 +130,7 @@ final class AppSettings {
         systemPrompt = defaults.string(forKey: Key.systemPrompt) ?? Self.defaultSystemPrompt
         projectID = defaults.string(forKey: Key.projectID) ?? ""
         handoffTemplate = defaults.string(forKey: Key.handoffTemplate) ?? Self.defaultHandoffTemplate
-        sendImage = defaults.object(forKey: Key.sendImage) as? Bool ?? true
+        sendImage = defaults.object(forKey: Key.sendImage) as? Bool ?? false
         ocrLanguage = defaults.string(forKey: Key.ocrLanguage)
         fastMode = defaults.bool(forKey: Key.fastMode)
         speechLocale = defaults.string(forKey: Key.speechLocale)

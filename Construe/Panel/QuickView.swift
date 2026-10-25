@@ -164,7 +164,8 @@ struct QuickView: View {
                     Text(notice)
                         .foregroundStyle(.tertiary)
                 } else if let clip = session.audioClip {
-                    Text("Caught \(clip.duration, format: .number.precision(.fractionLength(1))) s of audio.")
+                    let seconds = clip.duration.formatted(.number.precision(.fractionLength(1)))
+                    Text("Caught \(seconds) s of audio. Text only; the sound isn't sent.")
                         .foregroundStyle(.secondary)
                 } else {
                     HStack(spacing: 6) {

@@ -21,7 +21,7 @@ struct AppSettingsTests {
         #expect(settings.systemPrompt == AppSettings.defaultSystemPrompt)
         #expect(settings.projectID.isEmpty)
         #expect(settings.handoffTemplate == AppSettings.defaultHandoffTemplate)
-        #expect(settings.sendImage)
+        #expect(settings.sendImage == false)
         #expect(settings.ocrLanguage == nil)
         #expect(settings.fastMode == false)
         #expect(settings.speechLocale == nil)
@@ -36,7 +36,7 @@ struct AppSettingsTests {
         settings.systemPrompt = "Custom prompt"
         settings.projectID = "project-123"
         settings.handoffTemplate = "Custom {{reply}}"
-        settings.sendImage = false
+        settings.sendImage = true
         settings.ocrLanguage = "es"
         settings.fastMode = true
         settings.speechLocale = "es-ES"
@@ -50,7 +50,7 @@ struct AppSettingsTests {
         #expect(reloaded.systemPrompt == "Custom prompt")
         #expect(reloaded.projectID == "project-123")
         #expect(reloaded.handoffTemplate == "Custom {{reply}}")
-        #expect(reloaded.sendImage == false)
+        #expect(reloaded.sendImage)
         #expect(reloaded.ocrLanguage == "es")
         #expect(reloaded.fastMode)
         #expect(reloaded.speechLocale == "es-ES")
